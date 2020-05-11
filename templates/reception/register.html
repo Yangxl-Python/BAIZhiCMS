@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<head>
+    {% load static %}
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>百知Python课程管理系统-注册</title>
+	<link rel="stylesheet" type="text/css" href="{% static 'css/reset.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+	<script type="text/javascript" src="{% static 'js/jquery-1.12.4.min.js' %}" charset="utf-8"></script>
+	<script type="text/javascript" src="{% static 'js/register.js' %}" charset="utf-8"></script>
+</head>
+<body>
+<div class="register_con">
+    <div class="l_con fl">
+        <a class="reg_logo"><img src="{% static 'images/bz_logo.gif' %}" alt="logo"></a>
+        <div class="reg_slogan">站在时代风口 · 抢占人工智能</div>
+        <div class="reg_banner"></div>
+    </div>
+
+    <div class="r_con fr">
+        <div class="reg_title clearfix">
+            <h1>用户注册</h1>
+            <a href="{% url 'reception:login' %}">登录</a>
+        </div>
+        <div class="reg_form clearfix">
+            <form action="javascript:void(0)">
+            {% csrf_token %}
+            <ul>
+                <li>
+                    <label>用户名:</label>
+                    <input type="text" name="user_name" id="user_name" placeholder="请输入真实姓名">
+                    <span class="error_tip">提示信息</span>
+                </li>
+                <li>
+                    <label>密码:</label>
+                    <input type="password" name="pwd" id="pwd" placeholder="请输入密码">
+                    <span class="error_tip">提示信息</span>
+                </li>
+                <li>
+                    <label>确认密码:</label>
+                    <input type="password" name="cpwd" id="cpwd" placeholder="请输入确认密码">
+                    <span class="error_tip">提示信息</span>
+                </li>
+                <li>
+                    <label>邮箱:</label>
+                    <input type="text" name="email" id="email" placeholder="请输入邮箱">
+                    <span class="error_tip">提示信息</span>
+                </li>
+                <li>
+                    <label>验证码:</label>
+                    <input type="text" name="captcha" id="captcha" style="width: 100px;">
+                    <img src="{% url 'reception:captcha' %}" alt="验证码" width="100" height="40" id="captcha_img">
+                    <a href="javascript:void(0)" style="text-decoration: underline;" id="change_img">看不清，换一张</a>
+                    <span class="error_tip" id="tip_captcha" style="height: 27px">提示信息</span>
+                </li>
+                <li class="agreement">
+                    <input type="checkbox" name="allow" id="allow" checked="checked">
+                    <label>同意“百知课程管理系统使用协议”</label>
+                    <span class="error_tip2">提示信息</span>
+                </li>
+                <li class="reg_sub">
+                    <input type="submit" value="注 册" name="">
+                </li>
+            </ul>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer no-mp">
+    <div class="foot_link">
+        <a href="#">关于我们</a>
+        <span>|</span>
+        <a href="#">联系我们</a>
+        <span>|</span>
+        <a href="#">招聘人才</a>
+        <span>|</span>
+        <a href="#">友情链接</a>
+    </div>
+    <p>CopyRight © 2020 北京百知教育科技有限公司 All Rights Reserved</p>
+    <p>电话：010-****888    京ICP备*******8号</p>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    var check_captcha=false;  // 设置用户名和验证码检查通过状态
+    var check_user_name=false;
+    function image(url){
+        return '<img src="'+url+'" style="height: 16px;width: 16px;">'
+    }
+    $('#change_img').click(function () {  // 换一张验证码
+        $('#captcha_img').attr("src","{% url 'reception:captcha' %}?time="+(new Date()).getTime());
+    });
+    var $captcha=$('#captcha');
+    var $tip_captcha=$('#tip_captcha');
+    $captcha.blur(function () {  // 验证码框失去焦点时发送ajax请求验证验证码
+        var len=$captcha.val().length;
+        if (len===0){
+            $tip_captcha.text('验证码不能为空');
+        }else {
+            $tip_captcha.html(image('{% static 'images/5-121204193934-50.gif' %}'));
+            $.ajax({
+                type:'get',
+                url:'{% url 'reception:check' %}',
+                data:'captcha='+$captcha.val(),
+                success:function (data) {
+                    if (data==='True'){  // 判断响应结果并设置相应内容
+                        $tip_captcha.html(image('{% static 'images/right_3.jpg' %}'));
+                        check_captcha=true;
+                    }else {
+                        $tip_captcha.html(image('{% static 'images/error_3.jpg' %}'));
+                    }
+                }
+            });
+        }
+        $tip_captcha.show();
+    });
+    var $user_name=$('#user_name');
+    $user_name.blur(function () {  // 验证用户名是否存在
+        if($user_name.next().html()==='ok'){
+            $user_name.next().html(image('{% static 'images/5-121204193934-50.gif' %}'));
+            $user_name.next().show();
+            $.ajax({
+                type:'get',
+                url:'{% url 'reception:check_name' %}',
+                data:'user_name='+$user_name.val(),
+                success:function (data) {
+                    if (data==='False'){
+                        $user_name.next().html(image('{% static 'images/right_3.jpg' %}'));
+                        check_user_name=true;
+                    }else {
+                        $user_name.next().text('用户名已存在');
+                    }
+                }
+            });
+        }
+    });
+    var $submit=$(":submit");
+    $submit.click(function () {  // ajax请求提交表单
+        $submit.attr('disabled',true);
+        if (check_captcha && check_user_name){  // 判断检查通过状态
+            $.ajax({
+                type:'POST',
+                url:'{% url 'reception:reg_logic' %}',
+                data:$('form').serialize(),
+                success:function (data) {
+                    if (data==='success'){
+                        if(window.confirm('注册成功，请等待管理员审核')){
+                            window.location.href='{% url 'reception:login' %}';
+                        }
+                    }else if (data==='Failed to send mail'){
+                        window.alert('注册成功，激活邮件发送失败，请稍后重新发送')
+                    }else {
+                        window.alert('注册失败')
+                    }
+                    $submit.attr('disabled',false);
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
